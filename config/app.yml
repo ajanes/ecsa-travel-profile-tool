@@ -1,0 +1,86 @@
+conference:
+  name: ECSA 2026
+  dates: Mon 7 - Fri 11 September 2026
+  destination:
+    label: Bolzano, Italy
+    country: Italy
+    lat: 46.4983
+    lon: 11.3548
+
+emissions:
+  source:
+    label: Our World in Data - Carbon footprint of travel per kilometer
+    url: https://ourworldindata.org/grapher/carbon-footprint-travel-mode
+    year: 2022
+
+place_api:
+  base_url: https://photon.komoot.io
+  user_agent: travel-impact-calculator/1.0 (conference travel planner)
+  limit: 6
+
+transport_modes:
+  train:
+    label: Train
+    icon: train-front
+    grams_co2e_per_km: 35.49
+    source_entity: National rail
+  bus_coach:
+    label: Coach / Long-distance bus
+    icon: bus
+    grams_co2e_per_km: 27.33
+    source_entity: Coach (bus)
+  car_diesel:
+    label: Diesel car
+    icon: car-front
+    grams_co2e_per_km: 170.82
+    source_entity: Diesel car
+  car_petrol:
+    label: Petrol car
+    icon: car-front
+    grams_co2e_per_km: 170.48
+    source_entity: Petrol car
+  car_electric:
+    label: Electric car
+    icon: car
+    grams_co2e_per_km: 47.09
+    source_entity: Electric car
+  car_plugin_hybrid:
+    label: Plug-in hybrid car
+    icon: car
+    grams_co2e_per_km: 68.4
+    source_entity: Plug-in hybrid
+  motorbike:
+    label: Motorbike
+    icon: bike
+    grams_co2e_per_km: 113.55
+    source_entity: Motorbike
+  flight_domestic:
+    label: Domestic flight
+    icon: plane
+    grams_co2e_per_km: 245.87
+    source_entity: Domestic flight
+  flight_short_haul:
+    label: Short-haul flight
+    icon: plane
+    grams_co2e_per_km: 151.02
+    source_entity: Short-haul flight
+  flight_long_haul:
+    label: Long-haul flight
+    icon: plane
+    grams_co2e_per_km: 147.87
+    source_entity: Long-haul flight
+  ferry_foot:
+    label: Ferry (foot passenger)
+    icon: ship
+    grams_co2e_per_km: 18.74
+    source_entity: Ferry (foot passenger)
+  tram:
+    label: Tram
+    icon: tram-front
+    grams_co2e_per_km: 28.61
+    source_entity: Tram
+  metro:
+    label: Metro / Underground
+    icon: tram-front
+    grams_co2e_per_km: 27.81
+    source_entity: London Underground

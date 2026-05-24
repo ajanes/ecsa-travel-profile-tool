@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ conference.name }} Travel Impact Calculator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  </head>
+  <body>
+    <main class="embed-app">
+      <section class="shell page-header">
+        <h1>ECSA Travel Profile Tool</h1>
+        <p>Estimate the impact of a multi-leg trip ending in {{ conference.destination_label }}.</p>
+      </section>
+
+      <section class="shell dashboard">
+        <section class="panel panel--calculator">
+          <div class="panel__heading">
+            <div class="panel__title-wrap">
+              <div class="panel__icon">
+                <i data-lucide="calculator"></i>
+              </div>
+              <div>
+                <h2>ECSA Travel Profile Tool</h2>
+                <p class="panel__lede">
+                  Add one or more travel segments. The last leg always ends in
+                  <strong>{{ conference.destination_label }}</strong>.
+                </p>
+              </div>
+            </div>
+            <button class="ghost-button" id="add-segment" type="button">
+              <span class="ghost-button__icon">
+                <i data-lucide="plus-circle"></i>
+              </span>
+              Add segment
+            </button>
+          </div>
+
+          <div id="segments" class="segments"></div>
+        </section>
+
+        <aside class="results-stack">
+          <section class="result-hero">
+            <h3>Estimated Emissions</h3>
+            <div class="result-hero__value">
+              <span id="total-emissions">0 kg CO2e</span>
+            </div>
+            <div class="result-hero__meta">
+              <div class="result-hero__item">
+                <div class="result-hero__item-icon">
+                  <i data-lucide="route"></i>
+                </div>
+                <div>
+                  <p>Total distance</p>
+                  <strong id="total-distance">0 km</strong>
+                </div>
+              </div>
+              <div class="result-hero__item">
+                <div class="result-hero__item-icon">
+                  <i data-lucide="map-pinned"></i>
+                </div>
+                <div>
+                  <p>Conference destination</p>
+                  <strong>{{ conference.destination_label }}</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel panel--soft">
+            <div class="panel__heading">
+              <div class="panel__title-wrap">
+                <div class="panel__icon panel__icon--soft">
+                  <i data-lucide="database"></i>
+                </div>
+                <div>
+                  <h2>Study Data</h2>
+                  <p class="panel__lede">Compact segment code for later analysis.</p>
+                </div>
+              </div>
+              <button class="ghost-button" id="copy-study-data" type="button">
+                <span class="ghost-button__icon">
+                  <i data-lucide="copy"></i>
+                </span>
+                Copy
+              </button>
+            </div>
+            <textarea
+              id="study-data"
+              class="study-data"
+              readonly
+              spellcheck="false"
+              placeholder="A compact segment string will appear here after valid results are available."
+            ></textarea>
+            <p id="copy-study-data-status" class="copy-status" aria-live="polite"></p>
+          </section>
+        </aside>
+      </section>
+
+      <p class="shell source-note">
+        The emissions weights used in this calculator come from
+        <a href="https://ourworldindata.org/grapher/carbon-footprint-travel-mode" target="_blank" rel="noreferrer">
+          Our World in Data transport emissions per kilometer travelled
+        </a>.
+        Place search is powered by
+        <a href="https://github.com/komoot/photon" target="_blank" rel="noreferrer">komoot/photon</a>.
+        This tool and repository are licensed under GPL-3.0.
+      </p>
+    </main>
+
+    <script>
+      window.APP_CONFIG = {
+        destination: {{ destination | tojson }},
+        transportModes: {{ transport_modes | tojson }},
+      };
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  </body>
+</html>
