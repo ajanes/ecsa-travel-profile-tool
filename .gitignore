@@ -4,4 +4,4 @@
 __pycache__/
 *.py[cod]
 
-./build_push.sh
+**/build_push.sh
