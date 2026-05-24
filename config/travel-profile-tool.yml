@@ -7,9 +7,13 @@ conference:
     lon: 11.3548
 
 place_api:
-  base_url: https://photon.komoot.io
+  base_url: http://10.12.202.52:8080
+  search_path: /travel-profile-tool/api
+  reverse_path: /travel-profile-tool/reverse
   user_agent: travel-impact-calculator/1.0 (conference travel planner)
   limit: 6
+  bearer_token: 2f7b6f4d-1e57-4c8f-9a2d-6c0e8d4b7f31
+  bypass_proxy: true
 
 transport_modes:
   train:

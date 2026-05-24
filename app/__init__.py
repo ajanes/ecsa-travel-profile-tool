@@ -7,7 +7,7 @@ from app.services.places import PhotonPlaceService
 APP_ROOT = "/travel-profile-tool"
 
 
-def create_app(config_path: str = "config/app.yml") -> Flask:
+def create_app(config_path: str = "config/travel-profile-tool.yml") -> Flask:
     app = Flask(
         __name__,
         template_folder="../templates",

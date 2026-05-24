@@ -5,7 +5,7 @@ from app import create_app
 
 @pytest.fixture()
 def app():
-    app = create_app("config/app.yml")
+    app = create_app("config/travel-profile-tool.yml")
     app.config.update(TESTING=True)
     return app
 

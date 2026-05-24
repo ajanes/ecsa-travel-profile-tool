@@ -11,11 +11,15 @@ class PhotonPlaceService:
     def __init__(self, config: PlaceApiConfig):
         self._config = config
         self._session = requests.Session()
-        self._session.headers.update({"User-Agent": config.user_agent})
+        self._session.trust_env = not config.bypass_proxy
+        headers = {"User-Agent": config.user_agent}
+        if config.bearer_token:
+            headers["Authorization"] = f"Bearer {config.bearer_token}"
+        self._session.headers.update(headers)
 
     def search(self, query: str, limit: int | None = None) -> list[dict[str, Any]]:
         response = self._session.get(
-            f"{self._config.base_url.rstrip('/')}/api",
+            self._build_url(self._config.search_path),
             params={
                 "q": query,
                 "limit": limit or self._config.limit,
@@ -28,7 +32,7 @@ class PhotonPlaceService:
 
     def reverse(self, lat: float, lon: float) -> dict[str, Any] | None:
         response = self._session.get(
-            f"{self._config.base_url.rstrip('/')}/reverse",
+            self._build_url(self._config.reverse_path),
             params={
                 "lat": lat,
                 "lon": lon,
@@ -80,3 +84,6 @@ class PhotonPlaceService:
         if kind in {"city", "town", "village", "municipality", "hamlet"}:
             return "city"
         return "place"
+
+    def _build_url(self, path: str) -> str:
+        return f"{self._config.base_url.rstrip('/')}/{path.lstrip('/')}"

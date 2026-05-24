@@ -41,7 +41,12 @@
 
         <aside class="results-stack">
           <section class="result-hero">
-            <h3>Estimated Emissions</h3>
+            <div class="result-hero__heading">
+              <span class="result-hero__heading-icon" aria-hidden="true">
+                <i data-lucide="leaf"></i>
+              </span>
+              <h3>Estimated Emissions</h3>
+            </div>
             <div class="result-hero__value">
               <span id="total-emissions">0 kg CO₂eq</span>
             </div>
@@ -74,8 +79,8 @@
                   <i data-lucide="database"></i>
                 </div>
                 <div>
-                  <h2>Study Data</h2>
-                  <p class="panel__lede">Compact segment code for later analysis.</p>
+                  <h2>Travel Footprint Summary</h2>
+                  <p class="panel__lede">Travel footprint summary to provide during registration.</p>
                 </div>
               </div>
               <button class="ghost-button" id="copy-study-data" type="button">
@@ -90,7 +95,7 @@
               class="study-data"
               readonly
               spellcheck="false"
-              placeholder="A compact segment string will appear here after valid results are available."
+              placeholder="The summary string will appear here."
             ></textarea>
             <p id="copy-study-data-status" class="copy-status" aria-live="polite"></p>
           </section>
@@ -121,6 +126,17 @@
           itinerary: {{ url_for('main.itinerary') | tojson }},
         },
       };
+    </script>
+    <script>
+      function sendHeight() {
+        const height = document.documentElement.scrollHeight;
+        parent.postMessage({ type: "embed-height", height }, "*");
+      }
+
+      window.addEventListener("load", sendHeight);
+      window.addEventListener("resize", sendHeight);
+
+      new ResizeObserver(sendHeight).observe(document.body);
     </script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>

@@ -15,8 +15,11 @@ class DummyResponse:
 def test_place_service_normalizes_results(monkeypatch, app):
     config = app.config["APP_CONFIG"].place_api
     service = PhotonPlaceService(config)
+    assert service._session.headers["Authorization"] == f"Bearer {config.bearer_token}"
+    assert service._session.trust_env is False
 
     def fake_get(url, params, timeout):
+        assert url == "http://10.12.202.52:8080/travel-profile-tool/api"
         assert params["q"] == "Bolzano"
         return DummyResponse(
             {

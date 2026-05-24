@@ -40,7 +40,7 @@ docker compose up --build
 
 ## Configuration
 
-Edit `config/app.yml` to change:
+Edit `config/travel-profile-tool.yml` to change:
 
 - conference name, dates, and fixed destination
 - transport modes and emissions factors
@@ -185,12 +185,12 @@ mode_id,arrival_lat,arrival_lon
 
 All parts are joined with `;`.
 
-`mode_id` is the 1-based position of the transport mode in `config/app.yml`.
+`mode_id` is the 1-based position of the transport mode in `config/travel-profile-tool.yml`.
 
 ## Notes
 
 - The application does not ship with its own city database.
-- When a user types a prefix such as `Mu`, the frontend calls `GET /api/places`, and the backend queries the live place search service configured in `config/app.yml`.
+- When a user types a prefix such as `Mu`, the frontend calls `GET /api/places`, and the backend queries the live place search service configured in `config/travel-profile-tool.yml`.
 - The default place provider is Photon via `https://photon.komoot.io`.
 - Place coordinates come from the selected Photon search result and are then used for haversine distance estimation.
 - The final trip segment must end at the configured conference destination.

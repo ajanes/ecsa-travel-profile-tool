@@ -10,8 +10,12 @@ import yaml
 @dataclass(frozen=True)
 class PlaceApiConfig:
     base_url: str
+    search_path: str
+    reverse_path: str
     user_agent: str
     limit: int
+    bearer_token: str | None
+    bypass_proxy: bool
 
 
 @dataclass(frozen=True)
@@ -48,7 +52,11 @@ class AppConfig:
 
 
 def load_app_config(config_path: str) -> AppConfig:
-    raw = yaml.safe_load(Path(config_path).read_text(encoding="utf-8"))
+    requested_path = Path(config_path)
+    if not requested_path.exists():
+        raise FileNotFoundError(f"Configuration file not found: {requested_path}")
+
+    raw = yaml.safe_load(requested_path.read_text(encoding="utf-8"))
 
     conference = raw["conference"]
     destination = conference["destination"]
@@ -73,8 +81,12 @@ def load_app_config(config_path: str) -> AppConfig:
         ),
         place_api=PlaceApiConfig(
             base_url=place_api["base_url"],
+            search_path=place_api.get("search_path", "/api"),
+            reverse_path=place_api.get("reverse_path", "/reverse"),
             user_agent=place_api["user_agent"],
             limit=int(place_api["limit"]),
+            bearer_token=place_api.get("bearer_token"),
+            bypass_proxy=bool(place_api.get("bypass_proxy", False)),
         ),
         transport_modes=transport_modes,
     )
