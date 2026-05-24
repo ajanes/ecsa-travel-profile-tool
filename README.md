@@ -1,14 +1,18 @@
 # ECSA Travel Profile Tool
 
-Small Flask application for collecting conference travel profiles and estimating travel emissions for multi-leg trips ending at a configured destination.
+Flask application for collecting conference travel profiles and estimating emissions for multi-leg trips ending at a configured destination.
+
+Repository: https://github.com/ajanes/ecsa-travel-profile-tool  
+License: GPL-3.0
 
 ## Features
 
 - Single-page travel profile form with repeatable trip legs
-- Live place lookup for cities, airports, and stations
+- Live place search powered by Photon
 - Locked final destination from YAML config
 - Emissions estimates based on configurable per-kilometer factors
-- Compact study-data export string plus hidden decode API
+- Compact study-data export string with copy button
+- Hidden decode API for reconstructing itineraries from study-data strings
 - Docker and `docker compose` support
 
 ## Run locally
@@ -22,6 +26,12 @@ python run.py
 
 Open `http://localhost:5000`.
 
+For development autoreload, run:
+
+```bash
+flask --app run.py --debug run
+```
+
 ## Run with Docker
 
 ```bash
@@ -34,13 +44,15 @@ Edit `config/app.yml` to change:
 
 - conference name, dates, and fixed destination
 - transport modes and emissions factors
-- place lookup API settings
+- place search API settings
 
 ## HTTP API
 
 ### `GET /api/places?q=term`
 
-Returns normalized place suggestions:
+Returns normalized place suggestions from the configured place provider.
+
+Example response:
 
 ```json
 {
@@ -153,13 +165,13 @@ Response:
 
 ## Study Data Format
 
-The UI generates a compact study string like:
+The UI generates a compact string like:
 
 ```text
 48.2082,16.3738,1,46.4983,11.3548;47.3769,8.5417,2,46.4983,11.3548
 ```
 
-Each segment is:
+Each segment is encoded as:
 
 ```text
 from_lat,from_lon,mode_id,to_lat,to_lon
@@ -172,13 +184,11 @@ Segments are joined with `;`.
 ## Notes
 
 - The application does not ship with its own city database.
-  When a user types a prefix such as `Mu`, the frontend calls `GET /api/places`,
-  and the backend queries the live place lookup service configured in `config/app.yml`.
-  With the default setup, suggestions such as `Munich` come from the Photon geocoder.
-- Place coordinates come from the live place lookup service configured in `config/app.yml`.
-  The default setup uses Photon and stores the returned latitude and longitude
-  for the selected city, airport, or station.
-- Distance uses a haversine estimate between coordinates.
+- When a user types a prefix such as `Mu`, the frontend calls `GET /api/places`, and the backend queries the live place search service configured in `config/app.yml`.
+- The default place provider is Photon via `https://photon.komoot.io`.
+- Place coordinates come from the selected Photon search result and are then used for haversine distance estimation.
 - The final trip segment must end at the configured conference destination.
-- Emissions weights are seeded from Our World in Data:
+- The emissions weights used in the calculator come from:
   https://ourworldindata.org/grapher/carbon-footprint-travel-mode
+- Place search is powered by:
+  https://github.com/komoot/photon
