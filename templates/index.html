@@ -3,13 +3,13 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ conference.name }} Travel Impact Calculator</title>
+    <title>{{ conference.app_title }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
   </head>
   <body>
     <main class="embed-app">
       <section class="shell page-header">
-        <h1>ECSA Travel Profile Tool</h1>
+        <h1>{{ conference.app_title }}</h1>
         <p>Estimate the impact of a multi-leg trip ending in {{ conference.destination_label }}.</p>
       </section>
 
@@ -21,7 +21,7 @@
                 <i data-lucide="calculator"></i>
               </div>
               <div>
-                <h2>ECSA Travel Profile Tool</h2>
+                <h2>Travel profile</h2>
                 <p class="panel__lede">
                   Add one or more travel segments. The last leg always ends in
                   <strong>{{ conference.destination_label }}</strong>.
@@ -43,7 +43,7 @@
           <section class="result-hero">
             <h3>Estimated Emissions</h3>
             <div class="result-hero__value">
-              <span id="total-emissions">0 kg CO2e</span>
+              <span id="total-emissions">0 kg CO₂eq</span>
             </div>
             <div class="result-hero__meta">
               <div class="result-hero__item">

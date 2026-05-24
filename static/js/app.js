@@ -43,7 +43,7 @@
       departureQuery: "",
       arrival: null,
       arrivalQuery: "",
-      transportMode: transportModes[0]?.key || "",
+      transportMode: "",
     };
   }
 
@@ -55,14 +55,11 @@
 
   function render() {
     ensureMinimumSegments();
+    normalizeSegmentChain();
     segmentsRoot.innerHTML = "";
 
     state.segments.forEach((segment, index) => {
       const isLast = index === state.segments.length - 1;
-      if (isLast) {
-        segment.arrival = destination;
-        segment.arrivalQuery = destination.label;
-      }
 
       const wrapper = document.createElement("article");
       wrapper.className = "segment";
@@ -85,12 +82,16 @@
           </div>
         </div>
         <div class="segment__grid">
-          ${placeFieldMarkup("Departure", "departure", segment)}
+          ${index === 0 ? placeFieldMarkup("Departure", "departure", segment) : chainedDepartureMarkup(segment)}
           ${isLast ? lockedArrivalMarkup() : placeFieldMarkup("Arrival", "arrival", segment)}
           <div class="field field--full">
             <label for="mode-${segment.id}">Transport mode</label>
             <div class="select-field">
+              <span class="select-field__mode-icon" aria-hidden="true">
+                <i data-lucide="${segment.transportMode ? iconForMode(segment.transportMode) : "circle-help"}"></i>
+              </span>
               <select id="mode-${segment.id}" data-mode="${segment.id}">
+                <option value="" ${segment.transportMode ? "" : "selected"} disabled>Select transport mode</option>
                 ${transportModes
                   .map(
                     (mode) => `
@@ -137,6 +138,20 @@
     `;
   }
 
+  function chainedDepartureMarkup(segment) {
+    return `
+      <div class="field">
+        <label>Departure</label>
+        <div class="locked-destination">
+          <i data-lucide="arrow-right-left"></i>
+          <div>
+            <strong>${escapeHtml(segment.departureQuery || "Select previous arrival first")}</strong>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   function lockedArrivalMarkup() {
     return `
       <div class="field">
@@ -164,6 +179,11 @@
       select.addEventListener("change", () => {
         const segment = state.segments.find((item) => item.id === select.dataset.mode);
         segment.transportMode = select.value;
+        const iconContainer = select.parentElement.querySelector(".select-field__mode-icon");
+        if (iconContainer) {
+          iconContainer.innerHTML = `<i data-lucide="${select.value ? iconForMode(select.value) : "circle-help"}"></i>`;
+          lucide.createIcons();
+        }
         recalculate();
       });
     });
@@ -241,6 +261,7 @@
   }
 
   async function recalculate() {
+    normalizeSegmentChain();
     const payload = {
       segments: state.segments.map((segment, index) => ({
         departure: segment.departure,
@@ -275,31 +296,32 @@
 
   function renderResults(result, payload) {
     totalDistance.textContent = `${result.total_distance_km} km`;
-    totalEmissions.textContent = `${result.total_emissions_kg} kg CO2e`;
+    totalEmissions.textContent = `${result.total_emissions_kg} kg CO₂eq`;
     studyData.value = buildStudyDataString(payload);
     lucide.createIcons();
   }
 
   function showEmptyState() {
     totalDistance.textContent = "0 km";
-    totalEmissions.textContent = "0 kg CO2e";
+    totalEmissions.textContent = "0 kg CO₂eq";
     studyData.value = "";
     copyStudyDataStatus.textContent = "";
   }
 
   function buildStudyDataString(payload) {
-    return payload.segments
-      .map(
-        (segment) =>
-          [
-            roundCoordinate(segment.departure.lat),
-            roundCoordinate(segment.departure.lon),
-            transportModeCodes[segment.transport_mode] || 0,
-            roundCoordinate(segment.arrival.lat),
-            roundCoordinate(segment.arrival.lon),
-          ].join(","),
-      )
-      .join(";");
+    const [firstSegment, ...remainingSegments] = payload.segments;
+    return [
+      [roundCoordinate(firstSegment.departure.lat), roundCoordinate(firstSegment.departure.lon)].join(","),
+      ...remainingSegments.length >= 0
+        ? payload.segments.map((segment) =>
+            [
+              transportModeCodes[segment.transport_mode] || 0,
+              roundCoordinate(segment.arrival.lat),
+              roundCoordinate(segment.arrival.lon),
+            ].join(","),
+          )
+        : [],
+    ].join(";");
   }
 
   function roundCoordinate(value) {
@@ -315,6 +337,22 @@
     if (input) {
       input.focus();
       pendingFocusSegmentId = null;
+    }
+  }
+
+  function normalizeSegmentChain() {
+    state.segments.forEach((segment, index) => {
+      if (index > 0) {
+        const previousArrival = state.segments[index - 1].arrival;
+        segment.departure = previousArrival || null;
+        segment.departureQuery = previousArrival ? previousArrival.label : "";
+      }
+    });
+
+    const lastSegment = state.segments[state.segments.length - 1];
+    if (lastSegment) {
+      lastSegment.arrival = destination;
+      lastSegment.arrivalQuery = destination.label;
     }
   }
 

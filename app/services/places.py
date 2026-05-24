@@ -26,6 +26,24 @@ class PhotonPlaceService:
         payload = response.json()
         return [self._normalize_place(item) for item in payload.get("features", [])]
 
+    def reverse(self, lat: float, lon: float) -> dict[str, Any] | None:
+        response = self._session.get(
+            f"{self._config.base_url.rstrip('/')}/reverse",
+            params={
+                "lat": lat,
+                "lon": lon,
+                "limit": 1,
+            },
+            timeout=10,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        features = payload.get("features", [])
+        if not features:
+            return None
+
+        return self._normalize_place(features[0])
+
     def _normalize_place(self, item: dict[str, Any]) -> dict[str, Any]:
         properties = item.get("properties", {})
         coordinates = item.get("geometry", {}).get("coordinates", [])

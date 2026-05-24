@@ -67,42 +67,77 @@ def calculate_trip(segments: list[dict], transport_modes: dict, destination: dic
     }
 
 
-def decode_study_code(study_code: str, transport_modes: dict, destination: dict) -> dict:
-    segments = _segments_from_study_code(study_code, transport_modes, destination)
+def decode_study_code(
+    study_code: str,
+    transport_modes: dict,
+    destination: dict,
+    reverse_lookup=None,
+) -> dict:
+    segments = _segments_from_study_code(study_code, transport_modes, destination, reverse_lookup=reverse_lookup)
     result = calculate_trip(segments, transport_modes, destination)
 
     return {
-        "itinerary": segments,
-        "estimates": result,
+        "segments": [
+            {
+                "from_label": segment["departure"]["label"],
+                "from": [segment["departure"]["lat"], segment["departure"]["lon"]],
+                "to_label": segment["arrival"]["label"],
+                "to": [segment["arrival"]["lat"], segment["arrival"]["lon"]],
+                "transport_mode": result["segments"][index]["transport_mode"],
+                "transport_mode_key": segment["transport_mode"],
+                "distance_km": result["segments"][index]["distance_km"],
+                "emissions_kg": result["segments"][index]["emissions_kg"],
+            }
+            for index, segment in enumerate(segments)
+        ],
+        "total_distance_km": result["total_distance_km"],
+        "total_emissions_kg": result["total_emissions_kg"],
     }
 
 
-def _segments_from_study_code(study_code: str, transport_modes: dict, destination: dict) -> list[dict]:
+def _segments_from_study_code(study_code: str, transport_modes: dict, destination: dict, reverse_lookup=None) -> list[dict]:
     if not study_code or not study_code.strip():
         raise InvalidTripError("A non-empty study code is required.")
 
     ordered_mode_keys = list(transport_modes.keys())
+    encoded_parts = [part.strip() for part in study_code.split(";") if part.strip()]
+    if len(encoded_parts) < 2:
+        raise InvalidTripError("Study code must contain a start coordinate pair followed by at least one leg.")
+
+    start_parts = [part.strip() for part in encoded_parts[0].split(",")]
+    if len(start_parts) != 2:
+        raise InvalidTripError("The study code header must contain exactly 2 comma-separated start coordinates.")
+
+    try:
+        current_departure_lat = float(start_parts[0])
+        current_departure_lon = float(start_parts[1])
+    except ValueError as exc:
+        raise InvalidTripError("Study code contains invalid start coordinates.") from exc
+
     segments = []
 
-    for raw_segment in study_code.split(";"):
+    for raw_segment in encoded_parts[1:]:
         parts = [part.strip() for part in raw_segment.split(",")]
-        if len(parts) != 5:
-            raise InvalidTripError("Each encoded segment must contain 5 comma-separated values.")
+        if len(parts) != 3:
+            raise InvalidTripError("Each encoded leg must contain 3 comma-separated values.")
 
         try:
-            departure_lat = float(parts[0])
-            departure_lon = float(parts[1])
-            mode_index = int(parts[2])
-            arrival_lat = float(parts[3])
-            arrival_lon = float(parts[4])
+            mode_index = int(parts[0])
+            arrival_lat = float(parts[1])
+            arrival_lon = float(parts[2])
         except ValueError as exc:
             raise InvalidTripError("Study code contains invalid coordinates or transport mode ids.") from exc
 
         if mode_index < 1 or mode_index > len(ordered_mode_keys):
             raise InvalidTripError(f"Unknown transport mode id: {mode_index}.")
 
-        departure = _place_from_coordinates(departure_lat, departure_lon, destination)
-        arrival = _place_from_coordinates(arrival_lat, arrival_lon, destination)
+        departure = _place_from_coordinates(
+            current_departure_lat,
+            current_departure_lon,
+            destination,
+            reverse_lookup=reverse_lookup,
+        )
+        arrival = _place_from_coordinates(arrival_lat, arrival_lon, destination, reverse_lookup=reverse_lookup)
         segments.append(
             {
                 "departure": departure,
@@ -110,13 +145,23 @@ def _segments_from_study_code(study_code: str, transport_modes: dict, destinatio
                 "transport_mode": ordered_mode_keys[mode_index - 1],
             }
         )
+        current_departure_lat = arrival_lat
+        current_departure_lon = arrival_lon
 
     return segments
 
 
-def _place_from_coordinates(lat: float, lon: float, destination: dict) -> dict:
+def _place_from_coordinates(lat: float, lon: float, destination: dict, reverse_lookup=None) -> dict:
     if abs(lat - float(destination["lat"])) < 0.0001 and abs(lon - float(destination["lon"])) < 0.0001:
         return destination
+
+    if reverse_lookup is not None:
+        try:
+            place = reverse_lookup(lat, lon)
+        except Exception:
+            place = None
+        if place:
+            return place
 
     label = f"{lat:.4f},{lon:.4f}"
     return {

@@ -251,12 +251,25 @@ select,
 }
 
 select {
+  padding-left: 2.75rem;
   padding-right: 2.6rem;
   appearance: none;
 }
 
 .select-field {
   position: relative;
+}
+
+.select-field__mode-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  pointer-events: none;
+  transform: translateY(-50%);
 }
 
 .select-field__icon {

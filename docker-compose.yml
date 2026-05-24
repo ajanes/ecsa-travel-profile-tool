@@ -6,4 +6,4 @@ services:
     volumes:
       - ./config:/app/config
     environment:
-      FLASK_ENV: development
+      FLASK_ENV: production

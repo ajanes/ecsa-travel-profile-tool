@@ -11,12 +11,14 @@ bp = Blueprint("main", __name__)
 def index():
     app_config = current_app.config["APP_CONFIG"]
     destination = app_config.conference.destination_place
-    transport_modes = [mode.__dict__ for mode in app_config.transport_modes.values()]
+    transport_modes = sorted(
+        (mode.__dict__ for mode in app_config.transport_modes.values()),
+        key=lambda mode: mode["label"].lower(),
+    )
     return render_template(
         "index.html",
         conference=app_config.conference,
         destination=destination,
-        emissions_source=app_config.emissions_source,
         transport_modes=transport_modes,
     )
 
@@ -51,9 +53,15 @@ def calculate():
 def itinerary():
     study_code = request.args.get("code", "").strip()
     app_config = current_app.config["APP_CONFIG"]
+    service = current_app.config["PLACE_SERVICE"]
 
     try:
-        result = decode_study_code(study_code, app_config.transport_modes, app_config.conference.destination_place)
+        result = decode_study_code(
+            study_code,
+            app_config.transport_modes,
+            app_config.conference.destination_place,
+            reverse_lookup=service.reverse,
+        )
     except InvalidTripError as exc:
         return jsonify({"error": str(exc)}), 400
 

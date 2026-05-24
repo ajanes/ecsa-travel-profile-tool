@@ -119,7 +119,7 @@ Decodes the compact study-data string and returns a reconstructed itinerary plus
 Example:
 
 ```text
-/api/itinerary?code=48.2082,16.3738,1,46.4983,11.3548
+/api/itinerary?code=48.2082,16.3738;1,46.4983,11.3548
 ```
 
 Response:
@@ -168,16 +168,22 @@ Response:
 The UI generates a compact string like:
 
 ```text
-48.2082,16.3738,1,46.4983,11.3548;47.3769,8.5417,2,46.4983,11.3548
+48.2082,16.3738;1,46.4983,11.3548;2,47.3769,8.5417
 ```
 
-Each segment is encoded as:
+The first part is the initial departure:
 
 ```text
-from_lat,from_lon,mode_id,to_lat,to_lon
+start_lat,start_lon
 ```
 
-Segments are joined with `;`.
+Each following leg is encoded as:
+
+```text
+mode_id,arrival_lat,arrival_lon
+```
+
+All parts are joined with `;`.
 
 `mode_id` is the 1-based position of the transport mode in `config/app.yml`.
 

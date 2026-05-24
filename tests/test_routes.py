@@ -17,6 +17,19 @@ class StubPlaceService(PhotonPlaceService):
             }
         ]
 
+    def reverse(self, lat, lon):
+        lookup = {
+            (48.2082, 16.3738): {
+                "id": "1",
+                "label": "Vienna, Austria",
+                "type": "city",
+                "lat": 48.2082,
+                "lon": 16.3738,
+                "country": "Austria",
+            }
+        }
+        return lookup.get((lat, lon))
+
 
 def test_index_renders(client):
     response = client.get("/")
@@ -67,18 +80,23 @@ def test_calculate_route_returns_totals(app, client):
 
 
 def test_itinerary_route_decodes_study_code(client):
-    response = client.get("/api/itinerary?code=48.2082,16.3738,1,46.4983,11.3548")
+    app = client.application
+    app.config["PLACE_SERVICE"] = StubPlaceService()
+    response = client.get("/api/itinerary?code=48.2082,16.3738;1,46.4983,11.3548")
 
     assert response.status_code == 200
     payload = response.get_json()
-    assert payload["itinerary"][0]["transport_mode"] == "train"
-    assert payload["itinerary"][0]["arrival"]["label"] == "Bolzano, Italy"
-    assert payload["estimates"]["total_distance_km"] == 423.1
-    assert payload["estimates"]["total_emissions_kg"] == 15.02
+    assert payload["segments"][0]["from_label"] == "Vienna, Austria"
+    assert payload["segments"][0]["transport_mode"] == "Train"
+    assert payload["segments"][0]["transport_mode_key"] == "train"
+    assert payload["segments"][0]["to"] == [46.4983, 11.3548]
+    assert payload["segments"][0]["to_label"] == "Bolzano, Italy"
+    assert payload["total_distance_km"] == 423.1
+    assert payload["total_emissions_kg"] == 15.02
 
 
 def test_itinerary_route_rejects_invalid_study_code(client):
     response = client.get("/api/itinerary?code=bad-code")
 
     assert response.status_code == 400
-    assert "5 comma-separated values" in response.get_json()["error"]
+    assert "start coordinate pair" in response.get_json()["error"]
