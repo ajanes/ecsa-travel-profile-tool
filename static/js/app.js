@@ -155,7 +155,7 @@
 
   function lockedArrivalMarkup() {
     return `
-      <div class="field">
+      <div class="field field--with-hint">
         <label>Arrival</label>
         <div class="locked-destination">
           <i data-lucide="map-pinned"></i>
@@ -163,6 +163,7 @@
             <strong>${destination.label}</strong>
           </div>
         </div>
+        <p class="field__hint">More stops? Add a segment above.</p>
       </div>
     `;
   }

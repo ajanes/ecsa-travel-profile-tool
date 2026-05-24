@@ -205,6 +205,7 @@ select {
 
 .segment__grid {
   flex-wrap: wrap;
+  align-items: flex-start;
   gap: 1rem;
   margin-top: 1rem;
 }
@@ -218,6 +219,10 @@ select {
 
 .field--full {
   flex-basis: 100%;
+}
+
+.field--with-hint {
+  padding-bottom: 1.4rem;
 }
 
 label {
@@ -301,6 +306,14 @@ select:focus {
   gap: 0.75rem;
   align-items: center;
   background: #f8fbff;
+}
+
+.field__hint {
+  margin: 0;
+  color: var(--text-muted);
+  position: absolute;
+  left: 0;
+  bottom: 0;
 }
 
 .icon-button {
