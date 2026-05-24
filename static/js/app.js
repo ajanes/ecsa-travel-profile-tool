@@ -1,6 +1,7 @@
 (function () {
   const destination = window.APP_CONFIG.destination;
   const transportModes = window.APP_CONFIG.transportModes;
+  const apiUrls = window.APP_CONFIG.apiUrls;
   const segmentsRoot = document.getElementById("segments");
   const addSegmentButton = document.getElementById("add-segment");
   const totalDistance = document.getElementById("total-distance");
@@ -251,7 +252,7 @@
       return [];
     }
 
-    const response = await fetch(`/api/places?q=${encodeURIComponent(query)}`);
+    const response = await fetch(`${apiUrls.places}?q=${encodeURIComponent(query)}`);
     if (!response.ok) {
       return [];
     }
@@ -279,7 +280,7 @@
       return;
     }
 
-    const response = await fetch("/api/calculate", {
+    const response = await fetch(apiUrls.calculate, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

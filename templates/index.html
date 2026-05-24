@@ -115,6 +115,11 @@
       window.APP_CONFIG = {
         destination: {{ destination | tojson }},
         transportModes: {{ transport_modes | tojson }},
+        apiUrls: {
+          places: {{ url_for('main.places') | tojson }},
+          calculate: {{ url_for('main.calculate') | tojson }},
+          itinerary: {{ url_for('main.itinerary') | tojson }},
+        },
       };
     </script>
     <script src="https://unpkg.com/lucide@latest"></script>

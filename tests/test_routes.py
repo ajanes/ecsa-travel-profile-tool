@@ -32,23 +32,25 @@ class StubPlaceService(PhotonPlaceService):
 
 
 def test_index_renders(client):
-    response = client.get("/")
+    response = client.get("/travel-profile-tool/")
 
     assert response.status_code == 200
     assert b"ECSA Travel Profile Tool" in response.data
+    assert b'/travel-profile-tool/static/css/styles.css' in response.data
+    assert b'"/travel-profile-tool/api/places"' in response.data
 
 
 def test_places_route_returns_normalized_results(app, client):
     app.config["PLACE_SERVICE"] = StubPlaceService()
 
-    response = client.get("/api/places?q=Vienna")
+    response = client.get("/travel-profile-tool/api/places?q=Vienna")
 
     assert response.status_code == 200
     assert response.get_json()["results"][0]["label"] == "Vienna, Austria"
 
 
 def test_calculate_route_rejects_invalid_segments(client):
-    response = client.post("/api/calculate", json={"segments": []})
+    response = client.post("/travel-profile-tool/api/calculate", json={"segments": []})
 
     assert response.status_code == 400
     assert "At least one trip segment" in response.get_json()["error"]
@@ -57,7 +59,7 @@ def test_calculate_route_rejects_invalid_segments(client):
 def test_calculate_route_returns_totals(app, client):
     destination = app.config["APP_CONFIG"].conference.destination_place
     response = client.post(
-        "/api/calculate",
+        "/travel-profile-tool/api/calculate",
         json={
             "segments": [
                 {
@@ -82,7 +84,7 @@ def test_calculate_route_returns_totals(app, client):
 def test_itinerary_route_decodes_study_code(client):
     app = client.application
     app.config["PLACE_SERVICE"] = StubPlaceService()
-    response = client.get("/api/itinerary?code=48.2082,16.3738;1,46.4983,11.3548")
+    response = client.get("/travel-profile-tool/api/itinerary?code=48.2082,16.3738;1,46.4983,11.3548")
 
     assert response.status_code == 200
     payload = response.get_json()
@@ -96,7 +98,7 @@ def test_itinerary_route_decodes_study_code(client):
 
 
 def test_itinerary_route_rejects_invalid_study_code(client):
-    response = client.get("/api/itinerary?code=bad-code")
+    response = client.get("/travel-profile-tool/api/itinerary?code=bad-code")
 
     assert response.status_code == 400
     assert "start coordinate pair" in response.get_json()["error"]

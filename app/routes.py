@@ -4,7 +4,7 @@ from flask import Blueprint, current_app, jsonify, render_template, request
 
 from app.services.calculator import InvalidTripError, calculate_trip, decode_study_code
 
-bp = Blueprint("main", __name__)
+bp = Blueprint("main", __name__, url_prefix="/travel-profile-tool")
 
 
 @bp.get("/")

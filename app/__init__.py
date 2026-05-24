@@ -4,9 +4,16 @@ from app.config import load_app_config
 from app.routes import bp
 from app.services.places import PhotonPlaceService
 
+APP_ROOT = "/travel-profile-tool"
+
 
 def create_app(config_path: str = "config/app.yml") -> Flask:
-    app = Flask(__name__, template_folder="../templates", static_folder="../static")
+    app = Flask(
+        __name__,
+        template_folder="../templates",
+        static_folder="../static",
+        static_url_path=f"{APP_ROOT}/static",
+    )
 
     app_config = load_app_config(config_path)
     app.config["APP_CONFIG"] = app_config
