@@ -38,13 +38,13 @@ transport_modes:
     label: Motorbike
     grams_co2e_per_km: 113.55
   flight_domestic:
-    label: Domestic flight
+    label: "Flight: domestic"
     grams_co2e_per_km: 245.87
   flight_short_haul:
-    label: Short-haul flight
+    label: "Flight: Short-haul (up to 3700km distance)"
     grams_co2e_per_km: 151.02
   flight_long_haul:
-    label: Long-haul flight
+    label: "Flight: Long-haul (over 3700km distance)"
     grams_co2e_per_km: 147.87
   ferry_foot:
     label: Ferry (foot passenger)
@@ -55,3 +55,41 @@ transport_modes:
   metro:
     label: Metro / Underground
     grams_co2e_per_km: 27.81
+
+transport_mode_options:
+  train:
+    label: Train
+    transport_mode: train
+  bus_coach:
+    label: Coach / Long-distance bus
+    transport_mode: bus_coach
+  car_diesel:
+    label: Diesel car
+    transport_mode: car_diesel
+  car_petrol:
+    label: Petrol car
+    transport_mode: car_petrol
+  car_electric:
+    label: Electric car
+    transport_mode: car_electric
+  car_plugin_hybrid:
+    label: Plug-in hybrid car
+    transport_mode: car_plugin_hybrid
+  motorbike:
+    label: Motorbike
+    transport_mode: motorbike
+  flight_domestic:
+    label: "Flight: domestic"
+    transport_mode: flight_domestic
+  flight_international:
+    label: "Flight: international"
+    resolver: flight_international
+  ferry_foot:
+    label: Ferry (foot passenger)
+    transport_mode: ferry_foot
+  tram:
+    label: Tram
+    transport_mode: tram
+  metro:
+    label: Metro / Underground
+    transport_mode: metro

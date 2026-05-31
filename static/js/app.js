@@ -3,15 +3,11 @@
   const transportModes = window.APP_CONFIG.transportModes;
   const apiUrls = window.APP_CONFIG.apiUrls;
   const segmentsRoot = document.getElementById("segments");
-  const addSegmentButton = document.getElementById("add-segment");
   const totalDistance = document.getElementById("total-distance");
   const totalEmissions = document.getElementById("total-emissions");
   const studyData = document.getElementById("study-data");
   const copyStudyDataButton = document.getElementById("copy-study-data");
   const copyStudyDataStatus = document.getElementById("copy-study-data-status");
-  const transportModeCodes = Object.fromEntries(
-    transportModes.map((mode, index) => [mode.key, index + 1]),
-  );
 
   const state = {
     segments: [],
@@ -28,6 +24,7 @@
       car_plugin_hybrid: "car",
       motorbike: "bike",
       flight_domestic: "plane",
+      flight_international: "plane",
       flight_short_haul: "plane",
       flight_long_haul: "plane",
       ferry_foot: "ship",
@@ -74,11 +71,36 @@
             <button
               class="icon-button"
               type="button"
+              data-add-above="${segment.id}"
+              aria-label="Add segment above"
+            >
+              <i data-lucide="plus"></i>
+              <span>Add segment above</span>
+            </button>
+            ${
+              isLast
+                ? ""
+                : `
+            <button
+              class="icon-button"
+              type="button"
+              data-add-below="${segment.id}"
+              aria-label="Add segment below"
+            >
+              <i data-lucide="plus"></i>
+              <span>Add segment below</span>
+            </button>
+            `
+            }
+            <button
+              class="icon-button"
+              type="button"
               data-remove="${segment.id}"
               aria-label="Remove segment"
               ${state.segments.length === 1 ? "disabled" : ""}
             >
               <i data-lucide="trash-2"></i>
+              <span>Remove</span>
             </button>
           </div>
         </div>
@@ -169,6 +191,18 @@
   }
 
   function wireInteractions() {
+    segmentsRoot.querySelectorAll("[data-add-above]").forEach((button) => {
+      button.addEventListener("click", () => {
+        insertSegment(button.dataset.addAbove, "above");
+      });
+    });
+
+    segmentsRoot.querySelectorAll("[data-add-below]").forEach((button) => {
+      button.addEventListener("click", () => {
+        insertSegment(button.dataset.addBelow, "below");
+      });
+    });
+
     segmentsRoot.querySelectorAll("[data-remove]").forEach((button) => {
       button.addEventListener("click", () => {
         const segmentId = button.dataset.remove;
@@ -293,13 +327,13 @@
     }
 
     const result = await response.json();
-    renderResults(result, payload);
+    renderResults(result);
   }
 
-  function renderResults(result, payload) {
+  function renderResults(result) {
     totalDistance.textContent = `${result.total_distance_km} km`;
     totalEmissions.textContent = `${result.total_emissions_kg} kg CO₂eq`;
-    studyData.value = buildStudyDataString(payload);
+    studyData.value = result.study_code || "";
     lucide.createIcons();
   }
 
@@ -310,24 +344,17 @@
     copyStudyDataStatus.textContent = "";
   }
 
-  function buildStudyDataString(payload) {
-    const [firstSegment, ...remainingSegments] = payload.segments;
-    return [
-      [roundCoordinate(firstSegment.departure.lat), roundCoordinate(firstSegment.departure.lon)].join(","),
-      ...remainingSegments.length >= 0
-        ? payload.segments.map((segment) =>
-            [
-              transportModeCodes[segment.transport_mode] || 0,
-              roundCoordinate(segment.arrival.lat),
-              roundCoordinate(segment.arrival.lon),
-            ].join(","),
-          )
-        : [],
-    ].join(";");
-  }
+  function insertSegment(referenceSegmentId, position) {
+    const segmentIndex = state.segments.findIndex((segment) => segment.id === referenceSegmentId);
+    if (segmentIndex === -1) {
+      return;
+    }
 
-  function roundCoordinate(value) {
-    return Math.round(Number(value) * 10000) / 10000;
+    const insertAt = position === "above" ? segmentIndex : segmentIndex + 1;
+    const newSegment = createSegment();
+    state.segments.splice(insertAt, 0, newSegment);
+    pendingFocusSegmentId = newSegment.id;
+    render();
   }
 
   function applyPendingFocus() {
@@ -397,19 +424,6 @@
       copyStudyDataStatus.textContent = "Copy failed. Select the text and copy it manually.";
     }
   }
-
-  addSegmentButton.addEventListener("click", () => {
-    const currentLastSegment = state.segments[state.segments.length - 1];
-    if (currentLastSegment) {
-      currentLastSegment.arrival = null;
-      currentLastSegment.arrivalQuery = "";
-    }
-
-    const newSegment = createSegment();
-    pendingFocusSegmentId = newSegment.id;
-    state.segments.push(newSegment);
-    render();
-  });
 
   copyStudyDataButton.addEventListener("click", () => {
     copyStudyData();

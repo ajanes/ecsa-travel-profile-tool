@@ -38,6 +38,8 @@ def test_index_renders(client):
     assert b"ECSA Travel Profile Tool" in response.data
     assert b'/travel-profile-tool/static/css/styles.css' in response.data
     assert b'"/travel-profile-tool/api/places"' in response.data
+    assert b"Flight: international" in response.data
+    assert b"Flight: Short-haul" not in response.data
 
 
 def test_places_route_returns_normalized_results(app, client):
@@ -79,6 +81,7 @@ def test_calculate_route_returns_totals(app, client):
     payload = response.get_json()
     assert payload["total_distance_km"] == 423.1
     assert payload["total_emissions_kg"] == 15.02
+    assert payload["study_code"] == "48.2082,16.3738;1,46.4983,11.3548"
 
 
 def test_itinerary_route_decodes_study_code(client):

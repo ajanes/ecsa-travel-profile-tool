@@ -7,6 +7,8 @@ def test_load_app_config_reads_destination_and_modes():
     assert config.conference.destination_label == "Bolzano, Italy"
     assert config.conference.app_title == "ECSA Travel Profile Tool"
     assert config.transport_modes["train"].grams_co2e_per_km == 35.49
+    assert config.transport_mode_options["flight_domestic"].transport_mode == "flight_domestic"
+    assert config.transport_mode_options["flight_international"].resolver == "flight_international"
     assert config.place_api.bearer_token
     assert config.place_api.base_url == "http://10.12.202.52:8080"
     assert config.place_api.search_path == "/travel-profile-tool/api"

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from math import asin, cos, radians, sin, sqrt
 
+INTERNATIONAL_FLIGHT_SHORT_HAUL_MAX_KM = 3700.0
+
 
 class InvalidTripError(ValueError):
     pass
@@ -21,7 +23,12 @@ def haversine_km(origin: dict, destination: dict) -> float:
     return radius_km * c
 
 
-def calculate_trip(segments: list[dict], transport_modes: dict, destination: dict) -> dict:
+def calculate_trip(
+    segments: list[dict],
+    transport_modes: dict,
+    destination: dict,
+    transport_mode_options: dict | None = None,
+) -> dict:
     if not segments:
         raise InvalidTripError("At least one trip segment is required.")
 
@@ -30,6 +37,7 @@ def calculate_trip(segments: list[dict], transport_modes: dict, destination: dic
         raise InvalidTripError(f"The final segment must end in {destination['label']}.")
 
     calculated_segments = []
+    encoded_segments = []
     total_distance = 0.0
     total_emissions = 0.0
 
@@ -40,11 +48,14 @@ def calculate_trip(segments: list[dict], transport_modes: dict, destination: dic
 
         if not departure or not arrival or not mode_key:
             raise InvalidTripError("Each segment requires departure, arrival, and transport mode.")
-        if mode_key not in transport_modes:
-            raise InvalidTripError(f"Unknown transport mode: {mode_key}.")
-
-        mode = transport_modes[mode_key]
         distance_km = haversine_km(departure, arrival)
+        resolved_mode_key = _resolve_transport_mode_key(
+            mode_key,
+            distance_km,
+            transport_modes,
+            transport_mode_options=transport_mode_options,
+        )
+        mode = transport_modes[resolved_mode_key]
         emissions_kg = (distance_km * mode.grams_co2e_per_km) / 1000
 
         total_distance += distance_km
@@ -54,9 +65,16 @@ def calculate_trip(segments: list[dict], transport_modes: dict, destination: dic
                 "departure_label": departure["label"],
                 "arrival_label": arrival["label"],
                 "transport_mode": mode.label,
-                "transport_mode_key": mode.key,
+                "transport_mode_key": resolved_mode_key,
                 "distance_km": round(distance_km, 1),
                 "emissions_kg": round(emissions_kg, 2),
+            }
+        )
+        encoded_segments.append(
+            {
+                "departure": departure,
+                "arrival": arrival,
+                "transport_mode": resolved_mode_key,
             }
         )
 
@@ -64,6 +82,7 @@ def calculate_trip(segments: list[dict], transport_modes: dict, destination: dic
         "segments": calculated_segments,
         "total_distance_km": round(total_distance, 1),
         "total_emissions_kg": round(total_emissions, 2),
+        "study_code": _encode_study_code(encoded_segments, transport_modes),
     }
 
 
@@ -185,3 +204,59 @@ def _same_place(left: dict | None, right: dict) -> bool:
         )
     except (KeyError, TypeError, ValueError):
         return False
+
+
+def _resolve_transport_mode_key(
+    mode_key: str,
+    distance_km: float,
+    transport_modes: dict,
+    transport_mode_options: dict | None = None,
+) -> str:
+    if mode_key in transport_modes:
+        return mode_key
+
+    if transport_mode_options is None or mode_key not in transport_mode_options:
+        raise InvalidTripError(f"Unknown transport mode: {mode_key}.")
+
+    option = transport_mode_options[mode_key]
+    if option.transport_mode:
+        return option.transport_mode
+    if option.resolver == "flight_international":
+        if distance_km <= INTERNATIONAL_FLIGHT_SHORT_HAUL_MAX_KM:
+            return "flight_short_haul"
+        return "flight_long_haul"
+
+    raise InvalidTripError(f"Unsupported transport mode resolver: {option.resolver}.")
+
+
+def _encode_study_code(segments: list[dict], transport_modes: dict) -> str:
+    if not segments:
+        return ""
+
+    transport_mode_codes = {key: index + 1 for index, key in enumerate(transport_modes.keys())}
+    first_segment = segments[0]
+    parts = [
+        ",".join(
+            [
+                _round_coordinate(first_segment["departure"]["lat"]),
+                _round_coordinate(first_segment["departure"]["lon"]),
+            ]
+        )
+    ]
+
+    for segment in segments:
+        parts.append(
+            ",".join(
+                [
+                    str(transport_mode_codes[segment["transport_mode"]]),
+                    _round_coordinate(segment["arrival"]["lat"]),
+                    _round_coordinate(segment["arrival"]["lon"]),
+                ]
+            )
+        )
+
+    return ";".join(parts)
+
+
+def _round_coordinate(value: float) -> str:
+    return str(round(float(value), 4))

@@ -12,7 +12,7 @@ def index():
     app_config = current_app.config["APP_CONFIG"]
     destination = app_config.conference.destination_place
     transport_modes = sorted(
-        (mode.__dict__ for mode in app_config.transport_modes.values()),
+        (mode.__dict__ for mode in app_config.transport_mode_options.values()),
         key=lambda mode: mode["label"].lower(),
     )
     return render_template(
@@ -42,7 +42,12 @@ def calculate():
     app_config = current_app.config["APP_CONFIG"]
 
     try:
-        result = calculate_trip(segments, app_config.transport_modes, app_config.conference.destination_place)
+        result = calculate_trip(
+            segments,
+            app_config.transport_modes,
+            app_config.conference.destination_place,
+            transport_mode_options=app_config.transport_mode_options,
+        )
     except InvalidTripError as exc:
         return jsonify({"error": str(exc)}), 400
 

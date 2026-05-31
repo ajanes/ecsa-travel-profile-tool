@@ -45,10 +45,19 @@ class TransportMode:
 
 
 @dataclass(frozen=True)
+class TransportModeOption:
+    key: str
+    label: str
+    transport_mode: str | None = None
+    resolver: str | None = None
+
+
+@dataclass(frozen=True)
 class AppConfig:
     conference: ConferenceConfig
     place_api: PlaceApiConfig
     transport_modes: dict[str, TransportMode]
+    transport_mode_options: dict[str, TransportModeOption]
 
 
 def load_app_config(config_path: str) -> AppConfig:
@@ -70,6 +79,15 @@ def load_app_config(config_path: str) -> AppConfig:
         )
         for key, value in raw["transport_modes"].items()
     }
+    transport_mode_options = {
+        key: TransportModeOption(
+            key=key,
+            label=value["label"],
+            transport_mode=value.get("transport_mode"),
+            resolver=value.get("resolver"),
+        )
+        for key, value in raw["transport_mode_options"].items()
+    }
 
     return AppConfig(
         conference=ConferenceConfig(
@@ -89,4 +107,5 @@ def load_app_config(config_path: str) -> AppConfig:
             bypass_proxy=bool(place_api.get("bypass_proxy", False)),
         ),
         transport_modes=transport_modes,
+        transport_mode_options=transport_mode_options,
     )
